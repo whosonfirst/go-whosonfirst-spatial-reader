@@ -11,7 +11,7 @@ import (
 	wof_geojson "github.com/whosonfirst/go-whosonfirst-geojson-v2"
 	wof_reader "github.com/whosonfirst/go-whosonfirst-reader"
 	"github.com/whosonfirst/go-whosonfirst-spatial/geojson"
-	spatial_properties "github.com/whosonfirst/go-whosonfirst-spatial/properties"	
+	spatial_properties "github.com/whosonfirst/go-whosonfirst-spatial/properties"
 	"github.com/whosonfirst/go-whosonfirst-spr"
 	_ "log"
 	"net/url"
@@ -140,7 +140,7 @@ func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	rsp_ch := make(chan ChannelResponse)
+	rsp_ch := make(chan spatial_properties.ChannelResponse)
 	err_ch := make(chan error)
 	done_ch := make(chan bool)
 
@@ -168,7 +168,7 @@ func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx
 	return nil
 }
 
-func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.Context, idx int, f geojson.GeoJSONFeature, properties []string, rsp_ch chan ChannelResponse, err_ch chan error, done_ch chan bool) {
+func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.Context, idx int, f geojson.GeoJSONFeature, properties []string, rsp_ch chan spatial_properties.ChannelResponse, err_ch chan error, done_ch chan bool) {
 
 	defer func() {
 		done_ch <- true
@@ -219,7 +219,7 @@ func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.
 		return
 	}
 
-	rsp := ChannelResponse{
+	rsp := spatial_properties.ChannelResponse{
 		Index:   idx,
 		Feature: new_f,
 	}

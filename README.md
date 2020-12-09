@@ -1,5 +1,9 @@
 # go-whosonfirst-spatial-reader
 
+## Important
+
+Work in progress. Documentation to follow. This package may still be renamed...
+
 ## Interfaces
 
 This package implements the following [go-whosonfirst-spatial](#) interfaces.
