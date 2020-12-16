@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/aaronland/go-roster"
+	"github.com/paulmach/go.geojson"
 	wof_geojson "github.com/whosonfirst/go-whosonfirst-geojson-v2"
-	"github.com/whosonfirst/go-whosonfirst-spatial/geojson"
 	"github.com/whosonfirst/go-whosonfirst-spr"
 	"net/url"
 	"sort"
+	"strings"
 )
 
 type PropertiesResponse map[string]interface{}
@@ -20,7 +21,7 @@ type PropertiesResponseResults struct {
 type PropertiesReader interface {
 	IndexFeature(context.Context, wof_geojson.Feature) error
 	PropertiesResponseResultsWithStandardPlacesResults(context.Context, spr.StandardPlacesResults, []string) (*PropertiesResponseResults, error)
-	AppendPropertiesWithFeatureCollection(context.Context, *geojson.GeoJSONFeatureCollection, []string) error
+	AppendPropertiesWithFeatureCollection(context.Context, *geojson.FeatureCollection, []string) error
 	Close(context.Context) error
 }
 
@@ -60,8 +61,14 @@ func Schemes() []string {
 	ctx := context.Background()
 	schemes := []string{}
 
+	err := ensurePropertiesRoster()
+
+	if err != nil {
+		return schemes
+	}
+
 	for _, dr := range properties_readers.Drivers(ctx) {
-		scheme := fmt.Sprintf("%s://", dr)
+		scheme := fmt.Sprintf("%s://", strings.ToLower(dr))
 		schemes = append(schemes, scheme)
 	}
 

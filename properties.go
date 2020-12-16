@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/paulmach/go.geojson"
 	"github.com/tidwall/gjson"
 	"github.com/whosonfirst/go-cache"
 	go_reader "github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-reader-cachereader"
 	wof_geojson "github.com/whosonfirst/go-whosonfirst-geojson-v2"
 	wof_reader "github.com/whosonfirst/go-whosonfirst-reader"
-	"github.com/whosonfirst/go-whosonfirst-spatial/geojson"
 	spatial_properties "github.com/whosonfirst/go-whosonfirst-spatial/properties"
 	"github.com/whosonfirst/go-whosonfirst-spr"
 	_ "log"
@@ -135,7 +135,7 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 	return props_rsp, nil
 }
 
-func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx context.Context, fc *geojson.GeoJSONFeatureCollection, properties []string) error {
+func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx context.Context, fc *geojson.FeatureCollection, properties []string) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -168,7 +168,7 @@ func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx
 	return nil
 }
 
-func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.Context, idx int, f geojson.GeoJSONFeature, properties []string, rsp_ch chan spatial_properties.ChannelResponse, err_ch chan error, done_ch chan bool) {
+func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.Context, idx int, f *geojson.Feature, properties []string, rsp_ch chan spatial_properties.ChannelResponse, err_ch chan error, done_ch chan bool) {
 
 	defer func() {
 		done_ch <- true
@@ -211,7 +211,7 @@ func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.
 		return
 	}
 
-	var new_f geojson.GeoJSONFeature
+	var new_f *geojson.Feature
 	err = json.Unmarshal(target, &new_f)
 
 	if err != nil {
