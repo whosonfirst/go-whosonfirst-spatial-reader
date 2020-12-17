@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/paulmach/go.geojson"
-	"github.com/tidwall/gjson"
 	"github.com/whosonfirst/go-cache"
 	go_reader "github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-reader-cachereader"
 	wof_geojson "github.com/whosonfirst/go-whosonfirst-geojson-v2"
 	wof_reader "github.com/whosonfirst/go-whosonfirst-reader"
-	spatial_properties "github.com/whosonfirst/go-whosonfirst-spatial/properties"
+	"github.com/whosonfirst/go-whosonfirst-spatial"
+	"github.com/whosonfirst/go-whosonfirst-spatial/properties"
 	"github.com/whosonfirst/go-whosonfirst-spr"
 	_ "log"
 	"net/url"
@@ -20,15 +19,15 @@ import (
 
 func init() {
 	ctx := context.Background()
-	spatial_properties.RegisterPropertiesReader(ctx, "whosonfirst", NewWhosonfirstPropertiesReader)
+	properties.RegisterPropertiesReader(ctx, "whosonfirst", NewWhosonfirstPropertiesReader)
 }
 
 type WhosonfirstPropertiesReader struct {
-	spatial_properties.PropertiesReader
+	properties.PropertiesReader
 	reader go_reader.Reader
 }
 
-func NewWhosonfirstPropertiesReader(ctx context.Context, uri string) (spatial_properties.PropertiesReader, error) {
+func NewWhosonfirstPropertiesReader(ctx context.Context, uri string) (properties.PropertiesReader, error) {
 
 	u, err := url.Parse(uri)
 
@@ -83,13 +82,13 @@ func (db *WhosonfirstPropertiesReader) IndexFeature(context.Context, wof_geojson
 	return nil
 }
 
-func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlacesResults(ctx context.Context, results spr.StandardPlacesResults, properties []string) (*spatial_properties.PropertiesResponseResults, error) {
+func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlacesResults(ctx context.Context, results spr.StandardPlacesResults, property_keys []string) (*spatial.PropertiesResponseResults, error) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	previous_results := results.Results()
-	new_results := make([]*spatial_properties.PropertiesResponse, len(previous_results))
+	new_results := make([]*spatial.PropertiesResponse, len(previous_results))
 
 	for idx, r := range previous_results {
 
@@ -112,13 +111,13 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 			return nil, err
 		}
 
-		target, err = spatial_properties.AppendPropertiesWithJSON(ctx, source, target, properties, "")
+		target, err = properties.AppendPropertiesWithJSON(ctx, source, target, property_keys, "")
 
 		if err != nil {
 			return nil, err
 		}
 
-		var props *spatial_properties.PropertiesResponse
+		var props *spatial.PropertiesResponse
 		err = json.Unmarshal(target, &props)
 
 		if err != nil {
@@ -128,102 +127,9 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 		new_results[idx] = props
 	}
 
-	props_rsp := &spatial_properties.PropertiesResponseResults{
+	props_rsp := &spatial.PropertiesResponseResults{
 		Properties: new_results,
 	}
 
 	return props_rsp, nil
-}
-
-func (db *WhosonfirstPropertiesReader) AppendPropertiesWithFeatureCollection(ctx context.Context, fc *geojson.FeatureCollection, properties []string) error {
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	rsp_ch := make(chan spatial_properties.ChannelResponse)
-	err_ch := make(chan error)
-	done_ch := make(chan bool)
-
-	remaining := len(fc.Features)
-
-	for idx, f := range fc.Features {
-		go db.appendPropertiesWithChannels(ctx, idx, f, properties, rsp_ch, err_ch, done_ch)
-	}
-
-	for remaining > 0 {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-done_ch:
-			remaining -= 1
-		case rsp := <-rsp_ch:
-			fc.Features[rsp.Index] = rsp.Feature
-		case err := <-err_ch:
-			return err
-		default:
-			// pass
-		}
-	}
-
-	return nil
-}
-
-func (db *WhosonfirstPropertiesReader) appendPropertiesWithChannels(ctx context.Context, idx int, f *geojson.Feature, properties []string, rsp_ch chan spatial_properties.ChannelResponse, err_ch chan error, done_ch chan bool) {
-
-	defer func() {
-		done_ch <- true
-	}()
-
-	select {
-	case <-ctx.Done():
-		return
-	default:
-		// pass
-	}
-
-	target, err := json.Marshal(f)
-
-	if err != nil {
-		err_ch <- err
-		return
-	}
-
-	id_rsp := gjson.GetBytes(target, "properties.wof:id")
-
-	if !id_rsp.Exists() {
-		err_ch <- errors.New("Missing wof:id")
-		return
-	}
-
-	id := id_rsp.Int()
-
-	source, err := wof_reader.LoadBytesFromID(ctx, db.reader, id)
-
-	if err != nil {
-		err_ch <- err
-		return
-	}
-
-	target, err = spatial_properties.AppendPropertiesWithJSON(ctx, source, target, properties, "properties")
-
-	if err != nil {
-		err_ch <- err
-		return
-	}
-
-	var new_f *geojson.Feature
-	err = json.Unmarshal(target, &new_f)
-
-	if err != nil {
-		err_ch <- err
-		return
-	}
-
-	rsp := spatial_properties.ChannelResponse{
-		Index:   idx,
-		Feature: new_f,
-	}
-
-	rsp_ch <- rsp
-	return
 }
