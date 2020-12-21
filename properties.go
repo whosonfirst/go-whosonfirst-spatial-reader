@@ -99,6 +99,7 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 		}
 
 		str_id := r.Id()
+
 		id, err := strconv.ParseInt(str_id, 10, 64)
 
 		if err != nil {
@@ -111,7 +112,7 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 			return nil, err
 		}
 
-		target, err = properties.AppendPropertiesWithJSON(ctx, source, target, property_keys, "")
+		target, err = properties.AppendPropertiesWithJSON(ctx, source, target, property_keys, "properties")
 
 		if err != nil {
 			return nil, err
