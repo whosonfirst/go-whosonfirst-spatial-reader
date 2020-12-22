@@ -24,7 +24,7 @@ github.com/tidwall/sjson
 github.com/whosonfirst/go-cache
 # github.com/whosonfirst/go-reader v0.2.0
 github.com/whosonfirst/go-reader
-# github.com/whosonfirst/go-reader-cachereader v0.0.0-20200520215638-b6af3cdb91ac
+# github.com/whosonfirst/go-reader-cachereader v0.1.0
 github.com/whosonfirst/go-reader-cachereader
 # github.com/whosonfirst/go-whosonfirst-flags v0.2.0
 github.com/whosonfirst/go-whosonfirst-flags
