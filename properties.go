@@ -94,6 +94,7 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 		}
 
 		str_id := r.Id()
+
 		id, err := strconv.ParseInt(str_id, 10, 64)
 
 		if err != nil {
@@ -106,13 +107,13 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 			return nil, err
 		}
 
-		opts := &properties.AppendPropertiesOptions{
-			// SourcePrefix
-			// TargetPrefix
-			Keys: property_keys,
+		append_opts := &properties.AppendPropertiesOptions{
+			Keys:         property_keys,
+			SourcePrefix: "properties",
+			TargetPrefix: "",
 		}
 
-		target, err = properties.AppendPropertiesWithJSON(ctx, opts, source, target)
+		target, err = properties.AppendPropertiesWithJSON(ctx, append_opts, source, target)
 
 		if err != nil {
 			return nil, err
