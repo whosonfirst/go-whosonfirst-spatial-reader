@@ -4,14 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/whosonfirst/go-cache"
 	go_reader "github.com/whosonfirst/go-reader"
 	"github.com/whosonfirst/go-reader-cachereader"
 	wof_geojson "github.com/whosonfirst/go-whosonfirst-geojson-v2"
 	wof_reader "github.com/whosonfirst/go-whosonfirst-reader"
 	"github.com/whosonfirst/go-whosonfirst-spatial"
 	"github.com/whosonfirst/go-whosonfirst-spatial/properties"
-	"github.com/whosonfirst/go-whosonfirst-spr"
+	"github.com/whosonfirst/go-whosonfirst-spr/v2"
 	_ "log"
 	"net/url"
 	"strconv"
@@ -49,19 +48,15 @@ func NewWhosonfirstPropertiesReader(ctx context.Context, uri string) (properties
 		cache_uri = "null://"
 	}
 
-	r, err := go_reader.NewReader(ctx, reader_uri)
+	cr_params := url.Values{}
+	cr_params.Set("reader", reader_uri)
+	cr_params.Set("cache", cache_uri)
 
-	if err != nil {
-		return nil, err
-	}
+	cr_uri := url.URL{}
+	cr_uri.Scheme = "cachereader"
+	cr_uri.RawQuery = cr_params.Encode()
 
-	c, err := cache.NewCache(ctx, cache_uri)
-
-	if err != nil {
-		return nil, err
-	}
-
-	cr, err := cachereader.NewCacheReader(r, c)
+	cr, err := cachereader.NewCacheReader(ctx, cr_uri.String())
 
 	if err != nil {
 		return nil, err
