@@ -106,7 +106,13 @@ func (db *WhosonfirstPropertiesReader) PropertiesResponseResultsWithStandardPlac
 			return nil, err
 		}
 
-		target, err = properties.AppendPropertiesWithJSON(ctx, source, target, property_keys, "")
+		opts := &properties.AppendPropertiesOptions{
+			// SourcePrefix
+			// TargetPrefix
+			Keys: property_keys,
+		}
+
+		target, err = properties.AppendPropertiesWithJSON(ctx, opts, source, target)
 
 		if err != nil {
 			return nil, err
