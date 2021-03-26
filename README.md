@@ -2,7 +2,7 @@
 
 ## Important
 
-Work in progress. Documentation to follow. This package may still be renamed...
+This package is deprecated. Since the `go-whosonfirst-spatial/database.SpatialDatabase` interface implements the `reader.Reader` interface it is no longer relevant.
 
 ## Interfaces
 
